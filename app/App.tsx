@@ -1,5 +1,10 @@
 import Feed from "./screens/feed/Feed";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function App() {
-  return <Feed />;
+  return (
+    <SafeAreaProvider>
+      <Feed/>
+    </SafeAreaProvider>
+  );
 }

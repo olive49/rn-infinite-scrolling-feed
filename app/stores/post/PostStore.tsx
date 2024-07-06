@@ -1,4 +1,4 @@
-import { makeAutoObservable, runInAction } from "mobx";
+import { makeAutoObservable, runInAction, autorun, observable } from "mobx";
 import { Post, Feed } from "../../interface";
 import posts from "../../mocks/posts.json";
 
@@ -8,27 +8,33 @@ class PostStore {
   currentPage: number;
   totalCount: number;
   pageSize: number;
+  refreshing: boolean
   constructor() {
-    this.posts = [];
+    this.posts = observable.array([]);
     this.loading = false;
     this.currentPage = 0;
     this.totalCount = 0;
     this.pageSize = 5;
-    makeAutoObservable(this);
+    this.refreshing = false
+    makeAutoObservable(this, {}, { autoBind: true });
   }
 
   async fetchPosts(): Promise<void> {
-    // Simulating network request. For real-world applications, would use axios + react query
-    // https://github.com/TanStack/query
-    this.setLoading(true);
+    // Simulating network request with pagination
+    // For real-world applications, would use axios + react query, probably currentPage would be passed as a parameter, wouldn't need to slice the array
+    if (this.loading) {
+      return;
+    }
     try {
+      this.setLoading(true);
       const fetchPromise = new Promise<Feed>((resolve, reject) => {
         setTimeout(() => {
           const success = true;
           if (success) {
             const startIndex = this.currentPage * this.pageSize;
-            console.log("startIndex", startIndex, "pageSize", this.pageSize)
+            console.log("startIndex", startIndex, "pageSize", this.pageSize);
             const endIndex = startIndex + this.pageSize;
+            console.log("start index", startIndex, "end index", endIndex);
             const pagePosts = {
               posts: posts.slice(startIndex, endIndex),
               totalCount: posts.length,
@@ -60,20 +66,22 @@ class PostStore {
     console.log("in load more posts");
     console.log(this.posts.length, this.totalCount);
     if (this.posts.length < this.totalCount && !this.loading) {
-      this.setLoading(true);
-      try {
-        await this.fetchPosts();
-      } catch (error: any) {
-        throw error;
-      } finally {
-        this.setLoading(false);
-      }
+      await this.fetchPosts();
     }
   }
 
-  async likePost() {}
+  async updateLikes(postId: number): Promise<void> {
+    const postToUpdate = this.posts.find((post) => post.id === postId);
+    if (postToUpdate) {
+      postToUpdate.likes += 1;
+    }
+  }
 
-  async commentPost() {}
+  setIsRefreshing(isRefreshing: boolean): void {
+    this.refreshing = isRefreshing;
+  }
+
+  async updateComment(postId: number) {}
 
   private setLoading(loading: boolean): void {
     this.loading = loading;
