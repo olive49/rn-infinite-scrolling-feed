@@ -1,50 +1,51 @@
-# Welcome to your Expo app 👋
+# Getting Started
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
-
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-    npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Step 1: Clone the repository
 
 ```bash
-npm run reset-project
+git clone https://github.com/olive49/rn-infinite-scrolling-feed.git
+cd rn-infinite-scrolling-feed
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Step 2: Install the dependencies
 
-## Learn more
+```bash
+npm install
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+## Step 3: Launch the Application
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Run the following command to start the app with Metro Bundler:
 
-## Join the community
+```bash
+npm run start
+```
 
-Join our community of developers creating universal apps.
+Once started, you can:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Scan the QR code displayed in the terminal with the Expo Go app (Android) or the Camera app (iOS).
+For web, open the URL displayed in the terminal (example: http://localhost:8081).
+
+# Approach
+This app leverages MobX for state management due to its simplicity, reactivity, performance, quick setup, and my recent experience with it, which minimizes the learning curve.
+
+## State Management
+The backbone of the state is maintained in the PostStore class, where each variable is marked as observable. This ensures a single source of truth throughout the application. The useLoadPosts custom hook handles most interactions with the PostStore. It is responsible for:
+
+- Fetching the initial list of posts on mount.
+- Handling events when the user reaches the end of the list.
+- Refreshing the list when the user pulls to refresh.
+- Displaying appropriate messages in case of an empty list or errors during fetching or refreshing.
+
+## Optimization and Caching
+To optimize performance, we fetch and cache five list items at a time by adding them to the observable array within the PostStore instance. This strategy ensures efficient use of resources and a smoother user experience.
+
+## List Rendering
+In the React Native FlatList, we initially render five items. The onEndReachedThreshold is set to 0.5, triggering onEndReached when the user scrolls halfway through the list. This approach prevents loading too many items at once and reduces the wait time for users before the next set of items is fetched and displayed.
+
+## API Call Management
+The PostStore maintains variables such as isLoading and isRefreshing to track API call statuses, ensuring that multiple calls are not made simultaneously.
+
+By combining the power of MobX with strategic data fetching and caching, we ensure a responsive and efficient application that provides a seamless user experience.
+
+<img src="https://github.com/olive49/rn-infinite-scrolling-feed/blob/main/demo.gif" width="300" height="500">
