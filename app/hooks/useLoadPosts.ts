@@ -38,19 +38,19 @@ const useLoadPosts = (): UseLoadPostsReturn => {
   }, [PostStore.posts]);
 
   const onEndReached = useCallback(() => {
-    console.log("on end reached");
     PostStore.loadMorePosts();
   }, []);
 
   const onRefresh = useCallback(() => {
     const refreshAsync = async () => {
-      PostStore.setIsRefreshing(true);
-      await PostStore.fetchPosts();
-      PostStore.setIsRefreshing(false);
+      try {
+        await PostStore.refresh();
+      } catch (error: any) {
+        setEmptyListText(`${error.message}, please try again later`);
+      }
     };
 
     refreshAsync();
-
   }, []);
 
   return { list, onEndReached, emptyListText, loadingMore, onRefresh };

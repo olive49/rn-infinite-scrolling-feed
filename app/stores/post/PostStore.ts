@@ -8,20 +8,20 @@ class PostStore {
   currentPage: number;
   totalCount: number;
   pageSize: number;
-  refreshing: boolean
+  refreshing: boolean;
   constructor() {
     this.posts = observable.array([]);
     this.loading = false;
     this.currentPage = 0;
     this.totalCount = 0;
     this.pageSize = 5;
-    this.refreshing = false
+    this.refreshing = false;
     makeAutoObservable(this, {}, { autoBind: true });
   }
 
-  async fetchPosts(): Promise<void> {
+  async fetchPosts(refresh: boolean = false): Promise<void> {
     // Simulating network request with pagination
-    // For real-world applications, would use axios + react query, probably currentPage would be passed as a parameter, wouldn't need to slice the array
+    // For real-world applications, would use axios + react query, probably currentPage would be passed as a parameter
     if (this.loading) {
       return;
     }
@@ -31,11 +31,15 @@ class PostStore {
         setTimeout(() => {
           const success = true;
           if (success) {
-            const startIndex = this.currentPage * this.pageSize;
-            console.log("startIndex", startIndex, "pageSize", this.pageSize);
-            const endIndex = startIndex + this.pageSize;
-            console.log("start index", startIndex, "end index", endIndex);
-            const pagePosts = {
+            if (refresh) {
+              runInAction(() => {
+                this.currentPage = 0;
+                this.posts = [];
+              });
+            }
+            const startIndex: number = this.currentPage * this.pageSize;
+            const endIndex: number = startIndex + this.pageSize;
+            const pagePosts: Feed = {
               posts: posts.slice(startIndex, endIndex),
               totalCount: posts.length,
             };
@@ -46,12 +50,10 @@ class PostStore {
         }, 2000);
       });
 
-      const fetchPosts = await fetchPromise;
+      const fetchPosts: Feed  = await fetchPromise;
       runInAction(() => {
         this.posts = [...this.posts, ...fetchPosts.posts];
-        console.log("this.posts", this.posts);
         this.totalCount = fetchPosts.totalCount;
-        console.log("total count", this.totalCount);
         this.currentPage += 1;
       });
     } catch (error: any) {
@@ -63,25 +65,42 @@ class PostStore {
   }
 
   async loadMorePosts(): Promise<void> {
-    console.log("in load more posts");
-    console.log(this.posts.length, this.totalCount);
-    if (this.posts.length < this.totalCount && !this.loading) {
+    if (
+      this.posts.length < this.totalCount &&
+      !this.loading &&
+      !this.refreshing
+    ) {
       await this.fetchPosts();
     }
   }
 
-  async updateLikes(postId: number): Promise<void> {
+  // Because the data is not syncing to the server, refresh does not work as expected yet
+  // It will reset the posts to the initial state
+  // In a real-world application, this would be a call to the server to get the latest posts
+  async refresh(): Promise<void> {
+    if (this.refreshing) {
+      return;
+    }
+    this.setRefreshing(true);
+    try {
+      await this.fetchPosts(true);
+    } catch (error) {
+      throw new Error("Failed to refresh posts");
+    } finally {
+      this.setRefreshing(false);
+    }
+  }
+
+  updateLikes(postId: number): void {
     const postToUpdate = this.posts.find((post) => post.id === postId);
     if (postToUpdate) {
       postToUpdate.likes += 1;
     }
   }
 
-  setIsRefreshing(isRefreshing: boolean): void {
+  setRefreshing(isRefreshing: boolean): void {
     this.refreshing = isRefreshing;
   }
-
-  async updateComment(postId: number) {}
 
   private setLoading(loading: boolean): void {
     this.loading = loading;
