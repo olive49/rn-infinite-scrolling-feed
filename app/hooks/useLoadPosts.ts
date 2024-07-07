@@ -1,18 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
-import { Post } from "../interface";
 import PostStore from "../stores/post/PostStore";
 
 interface UseLoadPostsReturn {
-  list: Post[];
   onEndReached: () => void;
   emptyListText: string;
-  loadingMore: boolean;
   onRefresh: () => void;
 }
 
 const useLoadPosts = (): UseLoadPostsReturn => {
-  const [list, setList] = useState<Post[]>([]);
-  const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [emptyListText, setEmptyListText] =
     useState<string>("Check back soon!");
 
@@ -20,7 +15,6 @@ const useLoadPosts = (): UseLoadPostsReturn => {
     const fetchPosts = async () => {
       try {
         await PostStore.fetchPosts();
-        setList(PostStore.posts);
       } catch (error: any) {
         setEmptyListText(`${error.message}, please try again later`);
       }
@@ -28,14 +22,6 @@ const useLoadPosts = (): UseLoadPostsReturn => {
 
     fetchPosts();
   }, []);
-
-  useEffect(() => {
-    setLoadingMore(PostStore.loading);
-  }, [PostStore.loading]);
-
-  useEffect(() => {
-    setList(PostStore.posts);
-  }, [PostStore.posts]);
 
   const onEndReached = useCallback(() => {
     PostStore.loadMorePosts();
@@ -53,7 +39,7 @@ const useLoadPosts = (): UseLoadPostsReturn => {
     refreshAsync();
   }, []);
 
-  return { list, onEndReached, emptyListText, loadingMore, onRefresh };
+  return { onEndReached, emptyListText, onRefresh };
 };
 
 export default useLoadPosts;

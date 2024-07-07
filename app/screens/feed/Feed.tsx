@@ -15,7 +15,7 @@ import useLoadPosts from "@/app/hooks/useLoadPosts";
 import PostStore from "@/app/stores/post/PostStore";
 
 const Feed = observer(() => {
-  const { list, onEndReached, emptyListText, loadingMore, onRefresh } = useLoadPosts();
+  const { onEndReached, emptyListText, onRefresh } = useLoadPosts();
 
   // Wrapping renderItem in useCallback to avoid unneccessary re-renders of
   const renderItem = useCallback(({ item }: { item: Post }) => {
@@ -49,18 +49,18 @@ const Feed = observer(() => {
     <SafeAreaView style={styles.container} testID="feed">
       <FlatList
         testID="flatList"
-        data={toJS(list)}
+        data={toJS(PostStore.posts)}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
         initialNumToRender={5}
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
         onRefresh={onRefresh}
-        refreshing={PostStore.refreshing}
+        refreshing={PostStore.isRefreshing}
         ItemSeparatorComponent={itemSeparatorComponent}
         ListEmptyComponent={<Text>{emptyListText}</Text>}
         ListFooterComponent={
-          loadingMore ? <ActivityIndicator size="small" testID="activityIndicator"/> : <View />
+          PostStore.isLoading ? <ActivityIndicator size="small" testID="activityIndicator"/> : <View />
         }
       />
     </SafeAreaView>

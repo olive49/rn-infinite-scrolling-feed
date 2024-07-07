@@ -3,7 +3,6 @@ import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import Feed from './Feed';
 import useLoadPosts from './../../hooks/useLoadPosts';
 import PostStore from '@/app/stores/post/PostStore';
-import { toJS } from 'mobx';
 
 jest.mock('./../../hooks/useLoadPosts');
 jest.mock('@/app/stores/post/PostStore', () => ({
@@ -12,6 +11,7 @@ jest.mock('@/app/stores/post/PostStore', () => ({
 }));
 
 const mockUseLoadPosts = jest.mocked(useLoadPosts);
+const mockPostStore = jest.mocked(PostStore);
 
 describe('Feed Component', () => {
   beforeEach(() => {
@@ -20,10 +20,8 @@ describe('Feed Component', () => {
 
   test('renders without crashing with an empty list', () => {
     mockUseLoadPosts.mockReturnValue({
-      list: [],
       onEndReached: jest.fn(),
       emptyListText: 'No posts',
-      loadingMore: false,
       onRefresh: jest.fn(),
     });
 
@@ -37,11 +35,11 @@ describe('Feed Component', () => {
       { id: 1, user: 'User1', comment: 'Comment1', likes: 0, replies: [], date: '2021-10-01' },
       { id: 2, user: 'User2', comment: 'Comment2', likes: 1, replies: [], date: '2021-10-01' },
     ];
+
+    mockPostStore.posts = mockPosts;
     mockUseLoadPosts.mockReturnValue({
-      list: toJS(mockPosts),
       onEndReached: jest.fn(),
       emptyListText: 'No posts',
-      loadingMore: false,
       onRefresh: jest.fn(),
     });
 
@@ -52,11 +50,10 @@ describe('Feed Component', () => {
   });
 
   test('shows loading indicator when loading more posts', () => {
+    mockPostStore.isLoading = true
     mockUseLoadPosts.mockReturnValue({
-      list: [],
       onEndReached: jest.fn(),
       emptyListText: 'No posts',
-      loadingMore: true,
       onRefresh: jest.fn(),
     });
 
@@ -68,10 +65,8 @@ describe('Feed Component', () => {
   test('calls onRefresh when pull to refresh is triggered', async () => {
     const onRefreshMock = jest.fn();
     mockUseLoadPosts.mockReturnValue({
-      list: [],
       onEndReached: jest.fn(),
       emptyListText: 'No posts',
-      loadingMore: false,
       onRefresh: onRefreshMock,
     });
 
@@ -86,11 +81,10 @@ describe('Feed Component', () => {
     const mockPosts = [
       { id: 1, user: 'User1', comment: 'Comment1', likes: 0, replies: [], date: '2021-10-01' },
     ];
+    mockPostStore.posts = mockPosts;
     mockUseLoadPosts.mockReturnValue({
-      list: toJS(mockPosts),
       onEndReached: jest.fn(),
       emptyListText: 'No posts',
-      loadingMore: false,
       onRefresh: jest.fn(),
     });
 

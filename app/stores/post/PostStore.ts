@@ -1,28 +1,28 @@
-import { makeAutoObservable, runInAction, autorun, observable } from "mobx";
+import { makeAutoObservable, runInAction, observable } from "mobx";
 import { Post, Feed } from "../../interface";
 import posts from "../../mocks/posts.json";
 
 class PostStore {
   posts: Post[];
-  loading: boolean;
+  isLoading: boolean;
+  isRefreshing: boolean;
   currentPage: number;
   totalCount: number;
   pageSize: number;
-  refreshing: boolean;
   constructor() {
     this.posts = observable.array([]);
-    this.loading = false;
+    this.isLoading = false;
+    this.isRefreshing = false;
     this.currentPage = 0;
     this.totalCount = 0;
     this.pageSize = 5;
-    this.refreshing = false;
     makeAutoObservable(this, {}, { autoBind: true });
   }
 
   async fetchPosts(refresh: boolean = false): Promise<void> {
     // Simulating network request with pagination
     // For real-world applications, would use axios + react query, probably currentPage would be passed as a parameter
-    if (this.loading) {
+    if (this.isLoading || this.isRefreshing) {
       return;
     }
     try {
@@ -67,8 +67,8 @@ class PostStore {
   async loadMorePosts(): Promise<void> {
     if (
       this.posts.length < this.totalCount &&
-      !this.loading &&
-      !this.refreshing
+      !this.isLoading &&
+      !this.isRefreshing
     ) {
       await this.fetchPosts();
     }
@@ -78,7 +78,7 @@ class PostStore {
   // It will reset the posts to the initial state
   // In a real-world application, this would be a call to the server to get the latest posts
   async refresh(): Promise<void> {
-    if (this.refreshing) {
+    if (this.isRefreshing || this.isLoading) {
       return;
     }
     this.setRefreshing(true);
@@ -99,11 +99,11 @@ class PostStore {
   }
 
   setRefreshing(isRefreshing: boolean): void {
-    this.refreshing = isRefreshing;
+    this.isRefreshing = isRefreshing;
   }
 
   private setLoading(loading: boolean): void {
-    this.loading = loading;
+    this.isLoading = loading;
   }
 }
 
